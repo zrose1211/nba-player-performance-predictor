@@ -10,11 +10,11 @@ A regression project that compares machine learning models against a simple, str
 
 ## Data
 
-The default loader requests NBA regular-season per-game player statistics using the [nba_api Python client](https://github.com/swar/nba_api/blob/master/docs/nba_api/stats/endpoint_guide.md) for completed seasons ending 2010–2026. Each season is cached locally. Alternatively, supply a CSV containing one league-wide row per player-season with columns:
+The default loader downloads NBA Stats-derived season totals from the [nba_data archive](https://github.com/llimllib/nba_data) (see its [data dictionary](https://github.com/llimllib/nba_data/blob/main/docs/DATA_DICTIONARY.md)) for completed seasons ending 2010–2026, filters to regular-season rows, and converts counting statistics to per-game values. Each season is cached locally. The live NBA Stats API is an optional source (`python pipeline.py --source api`), but can time out on hosted runners. Alternatively, supply a CSV containing one league-wide row per player-season with columns:
 
 `PLAYER_ID, season, AGE, GP, MIN, PTS, REB, AST, FGA, FTA, FG3A`
 
-The season column is the integer ending year (2025 means 2024–25). Raw data are not committed. If the API is unavailable, obtain a compatible CSV through an authorized source.
+The season column is the integer ending year (2025 means 2024–25). Raw data are not committed. If the archive or API is unavailable, provide a compatible local CSV.
 
 ## Modeling and evaluation
 
@@ -44,7 +44,7 @@ Outputs: `reports/metrics.json`, `reports/predictions.csv`, and `reports/forecas
 
 ## Limitations
 
-The target is conditional on returning to the league, so this does not predict retirement, injury-related absence, or total seasonal production. Current-season minimum games filter excludes some players. Trades, roster changes, injuries, league scoring trends and role changes can alter future performance. NBA API availability may vary. This is a retrospective benchmark, not a betting tool.
+The target is conditional on returning to the league, so this does not predict retirement, injury-related absence, or total seasonal production. Current-season minimum games filter excludes some players. Trades, roster changes, injuries, league scoring trends and role changes can alter future performance. External data availability may vary. The archive is a third-party NBA Stats-derived dataset. This is a retrospective benchmark, not a betting tool.
 
 ## Automated evaluation
 

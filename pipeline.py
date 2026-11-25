@@ -13,7 +13,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 FEATURES = ['AGE','GP','MIN','PTS','REB','AST','FGA','FTA','FG3A','prior_pts','pts_change']
 
-def load_seasons(start, end, cache):
+def load_api_seasons(start, end, cache):
     from nba_api.stats.endpoints import leaguedashplayerstats
     import time
     cache = Path(cache); cache.mkdir(parents=True, exist_ok=True)
@@ -31,6 +31,41 @@ def load_seasons(start, end, cache):
         frame['season'] = year
         frames.append(frame)
     return pd.concat(frames,ignore_index=True)
+
+ARCHIVE = 'https://basketball-data.billmill.org/nba/stats/player_season_stats/season={year}/data.parquet'
+
+def load_seasons(start, end, cache):
+    """Read NBA Stats-derived season totals from the documented archive."""
+    import io
+    import requests
+    from requests.adapters import HTTPAdapter
+    from urllib3.util.retry import Retry
+    cache = Path(cache) / 'archive'
+    cache.mkdir(parents=True, exist_ok=True)
+    frames = []
+    with requests.Session() as session:
+        session.mount('https://', HTTPAdapter(max_retries=Retry(total=2, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])))
+        for year in range(start, end+1):
+            file = cache / f'{year}.csv'
+            if file.exists():
+                frame = pd.read_csv(file)
+            else:
+                response = session.get(ARCHIVE.format(year=year), timeout=(15,60))
+                response.raise_for_status()
+                raw = pd.read_parquet(io.BytesIO(response.content))
+                raw.columns = raw.columns.str.lower()
+                raw = raw.loc[raw['season_type'].eq('regular_season') & (raw['gp'] > 0)].copy()
+                if raw.empty:
+                    raise ValueError(f'No regular-season records for {year}')
+                counting = ['min','pts','reb','ast','fga','fta','fg3a']
+                raw[counting] = raw[counting].div(raw['gp'], axis=0)
+                frame = raw[['player_id','age','gp']+counting].rename(columns=str.upper)
+                frame['season'] = year
+                if frame.duplicated('PLAYER_ID').any():
+                    raise ValueError(f'Duplicate player rows in archive for {year}')
+                frame.to_csv(file,index=False)
+            frames.append(frame)
+    return pd.concat(frames, ignore_index=True)
 
 def prepare(raw):
     required = ['PLAYER_ID','season'] + FEATURES[:9]
@@ -85,6 +120,7 @@ def evaluate(d, validation_year, test_year):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--source',choices=['archive','api'],default='archive',help='Historical data provider; ignored with --csv')
     parser.add_argument('--csv',help='Local CSV with NBA API column names and season ending year')
     parser.add_argument('--start',type=int,default=2010)
     parser.add_argument('--end',type=int,default=2026)
@@ -92,8 +128,10 @@ def main():
     parser.add_argument('--test',type=int,default=2023)
     parser.add_argument('--out',default='reports')
     args=parser.parse_args()
-    raw=pd.read_csv(args.csv) if args.csv else load_seasons(args.start,args.end,'data/cache')
+    raw=pd.read_csv(args.csv) if args.csv else (load_seasons if args.source=='archive' else load_api_seasons)(args.start,args.end,'data/cache')
     metrics,pred=evaluate(prepare(raw),args.validation,args.test)
+    metrics['data_source'] = 'local CSV' if args.csv else args.source
+    metrics['last_input_season'] = int(raw['season'].max())
     out=Path(args.out);out.mkdir(parents=True,exist_ok=True)
     (out/'metrics.json').write_text(json.dumps(metrics,indent=2)+'\n')
     pred.to_csv(out/'predictions.csv',index=False)
