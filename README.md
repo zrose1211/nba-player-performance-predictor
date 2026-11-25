@@ -1,5 +1,7 @@
 # NBA Player Performance Predictor
 
+[Python](https://www.python.org/) · [Automated checks](https://github.com/zrose1211/nba-player-performance-predictor/actions) · [Source files](https://github.com/zrose1211/nba-player-performance-predictor/tree/main)
+
 ## Forecasting next-season scoring
 
 A regression project that compares machine learning models against a simple, strong benchmark: predicting that a player's next-season points per game (PPG) will equal their current-season PPG.
@@ -43,3 +45,7 @@ Outputs: `reports/metrics.json`, `reports/predictions.csv`, and `reports/forecas
 ## Limitations
 
 The target is conditional on returning to the league, so this does not predict retirement, injury-related absence, or total seasonal production. Current-season minimum games filter excludes some players. Trades, roster changes, injuries, league scoring trends and role changes can alter future performance. NBA API availability may vary. This is a retrospective benchmark, not a betting tool.
+
+## Automated evaluation
+
+The [Portfolio checks workflow](https://github.com/zrose1211/nba-player-performance-predictor/actions/workflows/checks.yml) runs the test suite on GitHub Actions. Select **Run workflow** to regenerate the evaluation outputs; download the `evaluation-results` artifact from a successful run. The refresh uses external data sources; availability and results depend on the downloaded snapshot. The workflow does not overwrite previously published historical metrics.
