@@ -6,7 +6,17 @@
 
 A regression project that compares machine learning models against a simple, strong benchmark: predicting that a player's next-season points per game (PPG) will equal their current-season PPG.
 
-**Status:** modeling pipeline and synthetic-data tests are provided. Full historical NBA evaluation is pending; no real-data accuracy or improvement is claimed.
+**Status:** historical evaluation completed successfully on November 25, 2026.
+
+## Verified results (2022–23 through 2025–26 holdout)
+
+| Metric | Ridge regression | Persistence baseline |
+| --- | ---: | ---: |
+| Holdout MAE (points per game) | **2.355** | 2.489 |
+
+Ridge regression reduced MAE by **5.4%** across 1,572 player-season observations. Model selection used the 2021–22 validation season; the subsequent four seasons were held out. The target is next-season points per game conditional on returning to the NBA, not game-level scoring or retirement probability.
+
+[Metrics JSON](reports_current/metrics.json) · [Successful evaluation and downloadable predictions/chart](https://github.com/zrose1211/nba-player-performance-predictor/actions/runs/45698839212)
 
 ## Data
 
