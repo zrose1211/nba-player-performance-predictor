@@ -78,7 +78,7 @@ def evaluate(d, validation_year, test_year):
              'test_rmse':float(mean_squared_error(test.target,pred)**.5),
              'baseline_rmse':float(mean_squared_error(test.target,test.PTS)**.5),
              'train_rows':len(train),'validation_rows':len(val),'test_rows':len(test),
-             'validation_target_year':validation_year,'first_test_target_year':test_year}
+             'validation_target_year':validation_year,'first_test_target_year':test_year,'last_test_target_year':int(test.target_season.max())}
     p=test[['PLAYER_ID','season','target_season','PTS','target']].copy()
     p['prediction']=pred
     return results,p
@@ -87,7 +87,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--csv',help='Local CSV with NBA API column names and season ending year')
     parser.add_argument('--start',type=int,default=2010)
-    parser.add_argument('--end',type=int,default=2025)
+    parser.add_argument('--end',type=int,default=2026)
     parser.add_argument('--validation',type=int,default=2022)
     parser.add_argument('--test',type=int,default=2023)
     parser.add_argument('--out',default='reports')
